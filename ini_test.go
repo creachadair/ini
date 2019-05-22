@@ -28,10 +28,10 @@ var tests = []struct {
 		{3, "comment", "", nil},
 	}},
 
-	{"section", "\n[alpha]\n [bravo]\n\n[ charlie delta ]\n", []result{
+	{"section", "\n[alpha]\n [bravo]\n\n[ charlie   delta\t echo ]\n", []result{
 		{2, "section", "alpha", nil},
 		{3, "section", "bravo", nil},
-		{5, "section", "charlie delta", nil},
+		{5, "section", "charlie delta echo", nil}, // normalize whitespace
 	}},
 
 	{"bare keys", "\n  \na\nb\n", []result{
@@ -54,6 +54,10 @@ var tests = []struct {
 		{1, "key/value", "a", []string{"b"}}, // indented, same key
 		{3, "key/value", "c", []string{""}},
 		{4, "key/value", "d", []string{""}}, // not indented, separate key
+	}},
+
+	{"normalize keys", " a   long   key = value   village", []result{
+		{1, "key/value", "a long key", []string{"value   village"}},
 	}},
 
 	{"LLVMBuild.txt", llvmBuildText, []result{

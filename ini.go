@@ -55,6 +55,55 @@ type Location struct {
 // Parse scans the INI data from r and invokes the callbacks on h with the
 // results. If h reports an error, parsing stops and that error is returned to
 // the caller of Parse.
+//
+// The INI syntax supported by Parse ignores blank lines and removes leading
+// and trailing whitespace from keys, section names, and values. Whole-line
+// comments are prefixed with a semicolon:
+//
+//   ; this is a comment
+//
+// Section headers are enclosed in square brackets, and permit whitespace:
+//
+//   [section header]
+//
+// Key-value pairs allow whitespace where sensible:
+//
+//   key1=first value
+//   key2 = second value
+//
+// Keys may contain whitespace, which is normalized. Whitespace is not
+// normalized within values:
+//
+//   ; "a long key" has value "value   village"
+//   a    long     key = value   village
+//
+// Keys may have multiple values, indicated by indentation:
+//
+//   ; letter has values alpha, bravo, charlie
+//   letter = alpha
+//       bravo
+//       charlie
+//
+//   ; number has values 1, 2, 3
+//   number =
+//       1
+//       2
+//       3
+//
+// A bare key that is not indented is assigned an empty value, so the following
+// are equivalent:
+//
+//   foo
+//   foo=
+//   foo =
+//
+// Note that these rules imply you cannot have a multi-valued key with an empty
+// string as one of its values.
+//
+// Parse does not check for duplication among section headers or keys; the
+// caller is responsible for any validation that is required.
+// Line continuations with trailing backslashes are not currently supported.
+// String quotation is not currently supported.
 func Parse(r io.Reader, h Handler) error {
 	buf := bufio.NewScanner(r)
 	var loc Location // current physical input location
@@ -95,7 +144,7 @@ func Parse(r io.Reader, h Handler) error {
 			} else if err := emit(); err != nil {
 				return err
 			}
-			name := strings.TrimSpace(clean[1 : len(clean)-1])
+			name := cleanKey(clean[1 : len(clean)-1])
 			if err := h.section(loc, name); err != nil {
 				return err
 			}
@@ -120,14 +169,14 @@ func Parse(r io.Reader, h Handler) error {
 			// one value of its own so we bypass accumulation
 			if err := emit(); err != nil {
 				return err
-			} else if err := h.keyValue(loc, clean, []string{""}); err != nil {
+			} else if err := h.keyValue(loc, cleanKey(clean), []string{""}); err != nil {
 				return err
 			}
 			continue
 		}
 
 		// At this point we have a key=value pair, which we must accumulate.
-		key := strings.TrimSpace(clean[:i])
+		key := cleanKey(clean[:i])
 		value := strings.TrimSpace(clean[i+1:])
 		if key != curKey {
 			if err := emit(); err != nil {
@@ -142,4 +191,8 @@ func Parse(r io.Reader, h Handler) error {
 		return err
 	}
 	return emit() // emit any leftover key/values
+}
+
+func cleanKey(key string) string {
+	return strings.Join(strings.Fields(key), " ")
 }
