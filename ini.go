@@ -32,11 +32,12 @@ type Handler struct {
 	// leading delimiter, but leading and trailing whitespace are removed.
 	Comment func(loc Location, text string) error
 
-	// Section delivers a section header.
+	// Section delivers a section header. Whitespace in name is normalized.
 	Section func(loc Location, name string) error
 
-	// KeyValue delivers the values for a single key. The values slice will not
-	// be empty, but will contain "" for a key with no value.
+	// KeyValue delivers the values for a single key. Whitespace in the key name
+	// is normalized. The values slice will not be empty, but will contain ""
+	// for a key with only one empty value.
 	KeyValue func(loc Location, key string, values []string) error
 }
 
@@ -85,8 +86,9 @@ type Location struct {
 //   key1=first value
 //   key2 = second value
 //
-// Keys may contain whitespace, which is normalized. Whitespace is not
-// normalized within values:
+// Keys may contain whitespace, which is normalized.  Each run of whitespace
+// inside the key is replaced by one Unicode space (32) character.
+// Whitespace is not normalized within values:
 //
 //   ; "a long key" has value "value   village"
 //   a    long     key = value   village
