@@ -86,9 +86,9 @@ type Location struct {
 //   key1=first value
 //   key2 = second value
 //
-// Keys may contain whitespace, which is normalized.  Each run of whitespace
-// inside the key is replaced by one Unicode space (32) character.
-// Whitespace is not normalized within values:
+// Keys and section names may contain whitespace, which is normalized.  Each
+// run of whitespace inside the key or section name is replaced by one Unicode
+// space (32) character.  Whitespace is not normalized within values:
 //
 //   ; "a long key" has value "value   village"
 //   a    long     key = value   village
