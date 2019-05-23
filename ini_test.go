@@ -64,10 +64,18 @@ var tests = []struct {
 	{"multi-value nonblank", "a=b\n c\n d", []result{
 		{1, "key/value", "a", []string{"b", "c", "d"}},
 	}},
+	{"multi-value skip", "a=\n b\n\n c\n d\n", []result{
+		{1, "key/value", "a", []string{"b", "c", "d"}},
+	}},
 	{"mixed-value blank", "a=\n b\nc=\nd", []result{
 		{1, "key/value", "a", []string{"b"}}, // indented, same key
 		{3, "key/value", "c", []string{""}},
-		{4, "key/value", "d", []string{""}}, // not indented, separate key
+		{4, "key/value", "d", []string{""}}, // not indented, new key
+	}},
+	{"mixed-value indent", "a=\n b\n c=d\n\ne", []result{
+		{1, "key/value", "a", []string{"b"}}, // indented, attaches
+		{3, "key/value", "c", []string{"d"}}, // indented with =, new key
+		{5, "key/value", "e", []string{""}},  // not indented, new key
 	}},
 
 	{"normalize keys", " a   long   key = value   village", []result{
