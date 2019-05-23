@@ -17,10 +17,9 @@ package ini
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"strings"
-
-	"golang.org/x/xerrors"
 )
 
 // Handler is a structure containing options and callbacks used by the parser
@@ -67,9 +66,36 @@ type Location struct {
 	Line int // line number, 1-based
 }
 
+// SyntaxError is the concrete type of error values denoting syntax problems
+// with INI input.
+type SyntaxError struct {
+	Location        // where the error occurred
+	Desc     string // general descripton of the error
+	Key      string // if applicable, the key or name affected
+}
+
+func (s *SyntaxError) Error() string {
+	msg := fmt.Sprintf("line %d: %s", s.Location.Line, s.Desc)
+	if s.Key != "" {
+		msg += ": " + s.Key
+	}
+	return msg
+}
+
+func syntaxError(loc Location, msg, key string) error {
+	return &SyntaxError{Location: loc, Desc: msg, Key: key}
+}
+
+const (
+	msgUnclosedHeader = "unclosed section header"
+	msgInvalidSection = "invalid section name"
+	msgEmptyKey       = "empty key"
+)
+
 // Parse scans the INI data from r and invokes the callbacks on h with the
 // results. If h reports an error, parsing stops and that error is returned to
-// the caller of Parse.
+// the caller of Parse. Errors in syntax have concrete type *SyntaxError, and
+// may be asserted to that type to recover location and name details.
 //
 // The INI syntax supported by Parse ignores blank lines and removes leading
 // and trailing whitespace from keys, section names, and values. Whole-line
@@ -156,11 +182,11 @@ func Parse(r io.Reader, h Handler) error {
 
 		if clean[0] == '[' {
 			if clean[len(clean)-1] != ']' {
-				return xerrors.Errorf("line %d: unclosed section header", loc.Line)
+				return syntaxError(loc, msgUnclosedHeader, clean[1:])
 			}
 			name := cleanKey(clean[1 : len(clean)-1])
 			if strings.ContainsAny(name, "[]") {
-				return xerrors.Errorf("line %d: invalid header name %q", loc.Line, name)
+				return syntaxError(loc, msgInvalidSection, name)
 			} else if err := emit(); err != nil {
 				return err
 			} else if err := h.section(loc, name); err != nil {
@@ -196,7 +222,7 @@ func Parse(r io.Reader, h Handler) error {
 		// At this point we have a key=value pair, which we must accumulate.
 		key := cleanKey(clean[:i])
 		if key == "" {
-			return xerrors.Errorf("line %d: empty key in assignment", loc.Line)
+			return syntaxError(loc, msgEmptyKey, "")
 		}
 		value := strings.TrimSpace(clean[i+1:])
 		if key != curKey {

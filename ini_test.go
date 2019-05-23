@@ -145,20 +145,33 @@ func TestParse(t *testing.T) {
 	}
 }
 
+// These must be in sync with the package ini values.
+const (
+	msgUnclosedHeader = "unclosed section header"
+	msgInvalidSection = "invalid section name"
+	msgEmptyKey       = "empty key"
+)
+
 func TestParseErrors(t *testing.T) {
-	tests := []string{
-		"[unclosed section header",
-		"[bad header name]]",
-		"[[bad header name]",
-		"= missing key",
-		"  = missing key ",
+	tests := []struct {
+		input, desc, key string
+	}{
+		{"[bad", msgUnclosedHeader, "bad"},
+		{"[bad name]]", msgInvalidSection, "bad name]"},
+		{"[[bad name]", msgInvalidSection, "[bad name"},
+		{"= missing key", msgEmptyKey, ""},
+		{"  = missing key ", msgEmptyKey, ""},
 	}
 	for _, test := range tests {
-		got, err := runParser(test)
+		got, err := runParser(test.input)
+		t.Logf("Parse(%q) reports %+v", test.input, err)
 		if err == nil {
-			t.Errorf("Parse(%q): got %+v, want error", test, got)
-		} else {
-			t.Logf("Parse(%q): error OK: %v", test, err)
+			t.Errorf("Parse(%q): got %+v, want error", test.input, got)
+		} else if e, ok := err.(*ini.SyntaxError); !ok {
+			t.Errorf("Parse(%q): got unexpected error: %v", test.input, err)
+		} else if e.Desc != test.desc || e.Key != test.key {
+			t.Errorf("Parse(%q): got error (%q, %q), want (%q, %q)",
+				test.input, e.Desc, e.Key, test.desc, test.key)
 		}
 	}
 }
