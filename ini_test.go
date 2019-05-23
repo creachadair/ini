@@ -74,6 +74,15 @@ var tests = []struct {
 		{1, "key/value", "a long key", []string{"value   village"}},
 	}},
 
+	{"sample.ini", sampleFile, []result{
+		{1, "comment", "", nil},
+		{3, "section", "quoted_fields", nil},
+
+		// Note that quotation marks around the field value are preserved.
+		{4, "key/value", "required", []string{`"EmailAddr,FirstName,LastName,Mesg"`}},
+		{5, "key/value", "csvfile", []string{`"contacts.csv"`}},
+	}},
+
 	{"LLVMBuild.txt", llvmBuildText, []result{
 		{1, "comment", "", nil}, {2, "comment", "", nil}, {3, "comment", "", nil},
 		{4, "comment", "", nil}, {5, "comment", "", nil}, {6, "comment", "", nil},
@@ -185,4 +194,11 @@ subdirectories =
 type = Group
 name = Libraries
 parent = $ROOT
+`
+
+const sampleFile = `; Example with quotes and trailing whitespace
+
+[quoted_fields]   
+  required = "EmailAddr,FirstName,LastName,Mesg"   
+  csvfile = "contacts.csv" 
 `
