@@ -157,11 +157,13 @@ func Parse(r io.Reader, h Handler) error {
 		if clean[0] == '[' {
 			if clean[len(clean)-1] != ']' {
 				return xerrors.Errorf("line %d: unclosed section header", loc.Line)
-			} else if err := emit(); err != nil {
-				return err
 			}
 			name := cleanKey(clean[1 : len(clean)-1])
-			if err := h.section(loc, name); err != nil {
+			if strings.ContainsAny(name, "[]") {
+				return xerrors.Errorf("line %d: invalid header name %q", loc.Line, name)
+			} else if err := emit(); err != nil {
+				return err
+			} else if err := h.section(loc, name); err != nil {
 				return err
 			}
 			continue
@@ -193,6 +195,9 @@ func Parse(r io.Reader, h Handler) error {
 
 		// At this point we have a key=value pair, which we must accumulate.
 		key := cleanKey(clean[:i])
+		if key == "" {
+			return xerrors.Errorf("line %d: empty key in assignment", loc.Line)
+		}
 		value := strings.TrimSpace(clean[i+1:])
 		if key != curKey {
 			if err := emit(); err != nil {

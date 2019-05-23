@@ -108,26 +108,32 @@ var tests = []struct {
 	}},
 }
 
+func runParser(s string) ([]result, error) {
+	var got []result
+	push := func(r result) error {
+		got = append(got, r)
+		return nil
+	}
+
+	err := ini.Parse(strings.NewReader(s), ini.Handler{
+		Comment: func(loc ini.Location, text string) error {
+			return push(result{loc.Line, "comment", "", nil})
+		},
+		Section: func(loc ini.Location, name string) error {
+			return push(result{loc.Line, "section", name, nil})
+		},
+		KeyValue: func(loc ini.Location, key string, values []string) error {
+			return push(result{loc.Line, "key/value", key, values})
+		},
+	})
+	return got, err
+}
+
 func TestParse(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
-			var got []result
-			push := func(r result) error {
-				got = append(got, r)
-				return nil
-			}
-
-			if err := ini.Parse(strings.NewReader(test.input), ini.Handler{
-				Comment: func(loc ini.Location, text string) error {
-					return push(result{loc.Line, "comment", "", nil})
-				},
-				Section: func(loc ini.Location, name string) error {
-					return push(result{loc.Line, "section", name, nil})
-				},
-				KeyValue: func(loc ini.Location, key string, values []string) error {
-					return push(result{loc.Line, "key/value", key, values})
-				},
-			}); err != nil {
+			got, err := runParser(test.input)
+			if err != nil {
 				if len(test.input) > 60 {
 					test.input = test.input[:60] + "..."
 				}
@@ -136,6 +142,24 @@ func TestParse(t *testing.T) {
 				t.Errorf("Parse results (-want, +got)\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestParseErrors(t *testing.T) {
+	tests := []string{
+		"[unclosed section header",
+		"[bad header name]]",
+		"[[bad header name]",
+		"= missing key",
+		"  = missing key ",
+	}
+	for _, test := range tests {
+		got, err := runParser(test)
+		if err == nil {
+			t.Errorf("Parse(%q): got %+v, want error", test, got)
+		} else {
+			t.Logf("Parse(%q): error OK: %v", test, err)
+		}
 	}
 }
 
