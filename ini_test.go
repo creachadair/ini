@@ -15,6 +15,8 @@
 package ini_test
 
 import (
+	"fmt"
+	"log"
 	"strings"
 	"testing"
 
@@ -182,6 +184,81 @@ func TestParseErrors(t *testing.T) {
 				test.input, e.Desc, e.Key, test.desc, test.key)
 		}
 	}
+}
+
+func ExampleParse() {
+	const iniFile = `
+;
+; This is an example INI file.
+;
+   file description = A list of users
+
+[user 1]
+name=Alice Jones
+role=sender
+
+[user 2]
+
+  name = Bob Smith
+  role = receiver
+
+[ user 3 ]
+name   = Eve
+role   = eavesdropper
+morals = 
+
+; note multiple values
+tools = deception
+  deceit
+  man in the middle attacks
+
+; EOF
+`
+	var commentLines []int // record where comments occurred
+	var curSection string  // track the current section label
+
+	if err := ini.Parse(strings.NewReader(iniFile), ini.Handler{
+		// Comment is called for each comment in the file.  If nil, comments will
+		// be discarded.
+		Comment: func(loc ini.Location, text string) error {
+			// loc provides the location of the element in the file.
+			commentLines = append(commentLines, loc.Line)
+			return nil
+		},
+
+		// Section is called for each section header.
+		Section: func(loc ini.Location, name string) error {
+			curSection = name
+			return nil
+		},
+
+		// KeyValue is called for each key-value pair. A key will have at least
+		// one value (possibly "").
+		KeyValue: func(loc ini.Location, key string, values []string) error {
+			for i, val := range values {
+				fmt.Printf("%-2d %q %s=%s\n", loc.Line+i, curSection, key, val)
+			}
+			return nil
+		},
+	}); err != nil {
+		log.Fatalf("Parse: %v", err)
+	}
+	fmt.Println("\nComment lines:", commentLines)
+
+	// Output:
+	// 5  "" file description=A list of users
+	// 8  "user 1" name=Alice Jones
+	// 9  "user 1" role=sender
+	// 13 "user 2" name=Bob Smith
+	// 14 "user 2" role=receiver
+	// 17 "user 3" name=Eve
+	// 18 "user 3" role=eavesdropper
+	// 19 "user 3" morals=
+	// 22 "user 3" tools=deception
+	// 23 "user 3" tools=deceit
+	// 24 "user 3" tools=man in the middle attacks
+	//
+	// Comment lines: [2 3 4 21 26]
 }
 
 const llvmBuildText = "" +
