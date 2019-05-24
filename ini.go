@@ -188,7 +188,7 @@ func Parse(r io.Reader, h Handler) error {
 				return syntaxError(loc, msgUnclosedHeader, clean[1:])
 			}
 			name := cleanKey(clean[1 : len(clean)-1])
-			if strings.ContainsAny(name, "[]") {
+			if name == "" || strings.ContainsAny(name, "[]") {
 				return syntaxError(loc, msgInvalidSection, name)
 			} else if err := emit(); err != nil {
 				return err

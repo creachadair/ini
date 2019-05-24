@@ -169,6 +169,8 @@ func TestParseErrors(t *testing.T) {
 		{"[bad", msgUnclosedHeader, "bad"},
 		{"[bad name]]", msgInvalidSection, "bad name]"},
 		{"[[bad name]", msgInvalidSection, "[bad name"},
+		{"[]", msgInvalidSection, ""},
+		{"[    ]", msgInvalidSection, ""},
 		{"= missing key", msgEmptyKey, ""},
 		{"  = missing key ", msgEmptyKey, ""},
 	}
