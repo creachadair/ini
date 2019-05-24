@@ -50,9 +50,10 @@ var tests = []struct {
 		{5, "section", "charlie delta echo", nil}, // normalize whitespace
 	}},
 
-	{"bare keys", "\n  \na\nb\n", []result{
+	{"bare keys", "\n  \na\nb\n\n  c\t  d\n", []result{
 		{3, "key/value", "a", []string{""}},
 		{4, "key/value", "b", []string{""}},
+		{6, "key/value", "c d", []string{""}},
 	}},
 
 	{"single keys", " a = 45 \nb = 29", []result{
