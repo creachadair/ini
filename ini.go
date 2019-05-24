@@ -70,7 +70,7 @@ type Location struct {
 // with INI input.
 type SyntaxError struct {
 	Location        // where the error occurred
-	Desc     string // general descripton of the error
+	Desc     string // general description of the error
 	Key      string // if applicable, the key or name affected
 }
 
