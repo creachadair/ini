@@ -215,7 +215,6 @@ tools = deception
 ; EOF
 `
 	var commentLines []int // record where comments occurred
-	var curSection string  // track the current section label
 
 	if err := ini.Parse(strings.NewReader(iniFile), ini.Handler{
 		// Comment is called for each comment in the file.  If nil, comments will
@@ -226,17 +225,19 @@ tools = deception
 			return nil
 		},
 
-		// Section is called for each section header.
+		// Section is called for each section header. If nil, section headers
+		// will not be reported but will still be tracked in Location.
 		Section: func(loc ini.Location, name string) error {
-			curSection = name
+			fmt.Printf("New section: %s (was %q)\n", name, loc.Section)
 			return nil
 		},
 
 		// KeyValue is called for each key-value pair. A key will have at least
-		// one value (possibly "").
+		// one value (possibly ""). A Location includes the label of the most
+		// recent section.
 		KeyValue: func(loc ini.Location, key string, values []string) error {
 			for i, val := range values {
-				fmt.Printf("%-2d %q %s=%s\n", loc.Line+i, curSection, key, val)
+				fmt.Printf("%-2d %q %s=%s\n", loc.Line+i, loc.Section, key, val)
 			}
 			return nil
 		},
@@ -247,10 +248,13 @@ tools = deception
 
 	// Output:
 	// 5  "" file description=A list of users
+	// New section: user 1 (was "")
 	// 8  "user 1" name=Alice Jones
 	// 9  "user 1" role=sender
+	// New section: user 2 (was "user 1")
 	// 13 "user 2" name=Bob Smith
 	// 14 "user 2" role=receiver
+	// New section: user 3 (was "user 2")
 	// 17 "user 3" name=Eve
 	// 18 "user 3" role=eavesdropper
 	// 19 "user 3" morals=

@@ -31,7 +31,9 @@ type Handler struct {
 	// leading delimiter, but leading and trailing whitespace are removed.
 	Comment func(loc Location, text string) error
 
-	// Section delivers a section header. Whitespace in name is normalized.
+	// Section delivers a section header. Whitespace in name is normalized.  The
+	// loc.Section field contains the name of the most recent section label
+	// prior to this one.
 	Section func(loc Location, name string) error
 
 	// KeyValue delivers the values for a single key. Whitespace in the key name
@@ -63,7 +65,8 @@ func (h Handler) keyValue(loc Location, key string, values []string) error {
 
 // A Location describes the physical location of an input element.
 type Location struct {
-	Line int // line number, 1-based
+	Line    int    // line number, 1-based
+	Section string // most recent section name (or "")
 }
 
 // SyntaxError is the concrete type of error values denoting syntax problems
@@ -192,6 +195,7 @@ func Parse(r io.Reader, h Handler) error {
 			} else if err := h.section(loc, name); err != nil {
 				return err
 			}
+			loc.Section = name
 			continue
 		}
 
