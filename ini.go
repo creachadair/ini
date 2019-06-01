@@ -106,7 +106,8 @@ const (
 //
 //   ; this is a comment
 //
-// Section headers are enclosed in square brackets, and permit whitespace:
+// Section headers are enclosed in square brackets, and permit horizontal
+// whitespace:
 //
 //   [section header]
 //
