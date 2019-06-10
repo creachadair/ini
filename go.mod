@@ -1,4 +1,4 @@
-module bitbucket.org/creachadair/ini
+module github.com/creachadair/ini
 
 go 1.12
 

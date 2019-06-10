@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"bitbucket.org/creachadair/ini"
+	"github.com/creachadair/ini"
 	"github.com/google/go-cmp/cmp"
 )
 

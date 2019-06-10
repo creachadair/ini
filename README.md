@@ -1,8 +1,8 @@
 # ini
 
-http://godoc.org/bitbucket.org/creachadair/ini
+http://godoc.org/github.com/creachadair/ini
 
-[![Go Report Card](https://goreportcard.com/badge/bitbucket.org/creachadair/ini)](https://goreportcard.com/report/bitbucket.org/creachadair/ini)
+[![Go Report Card](https://goreportcard.com/badge/github.com/creachadair/ini)](https://goreportcard.com/report/github.com/creachadair/ini)
 
 This repository provides Go package that implements a basic INI file parser.
 The interface is intentionally and aggressively minimalistic, providing only
