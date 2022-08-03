@@ -104,44 +104,44 @@ const (
 // and trailing whitespace from keys, section names, and values. Whole-line
 // comments are prefixed with a semicolon:
 //
-//   ; this is a comment
+//	; this is a comment
 //
 // Section headers are enclosed in square brackets, and permit horizontal
 // whitespace:
 //
-//   [section header]
+//	[section header]
 //
 // Key-value pairs allow whitespace where sensible:
 //
-//   key1=first value
-//   key2 = second value
+//	key1=first value
+//	key2 = second value
 //
 // Keys and section names may contain whitespace, which is normalized.  Each
 // run of whitespace inside the key or section name is replaced by one Unicode
 // space (32) character.  Whitespace is not normalized within values:
 //
-//   ; "a long key" has value "value   village"
-//   a    long     key = value   village
+//	; "a long key" has value "value   village"
+//	a    long     key = value   village
 //
 // Keys may have multiple values, indicated by indentation:
 //
-//   ; letter has values alpha, bravo, charlie
-//   letter = alpha
-//       bravo
-//       charlie
+//	; letter has values alpha, bravo, charlie
+//	letter = alpha
+//	    bravo
+//	    charlie
 //
-//   ; number has values 1, 2, 3
-//   number =
-//       1
-//       2
-//       3
+//	; number has values 1, 2, 3
+//	number =
+//	    1
+//	    2
+//	    3
 //
 // A bare key that is not indented is assigned an empty value, so the following
 // are equivalent:
 //
-//   foo
-//   foo=
-//   foo =
+//	foo
+//	foo=
+//	foo =
 //
 // Note that these rules imply you cannot have a multi-valued key with an empty
 // string as one of its values.
